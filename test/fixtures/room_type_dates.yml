@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  date: 2019-06-27
+  rate: 9.99
+  room_type_id: 
+
+two:
+  date: 2019-06-27
+  rate: 9.99
+  room_type_id: 
