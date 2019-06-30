@@ -1,5 +1,5 @@
 class HotelSerializer < ActiveModel::Serializer
-  attributes :name, :cover_image, :id
+  attributes :name, :cover_image, :uuid
 
   has_many :room_types
 end

@@ -6,7 +6,8 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 
-hotel = Hotel.create(name: 'test hotel')
+hotel = Hotel.create(name: 'test hotel', cover_image: 'https://upload.wikimedia.org/wikipedia/commons/4/49/Koala_climbing_tree.jpg')
+hotel2 = Hotel.create(name: 'test hotel2', cover_image: 'https://upload.wikimedia.org/wikipedia/commons/4/49/Koala_climbing_tree.jpg')
 
 room_type_1 = hotel.room_types.create(name: 'test room type 1')
 room_type_2 = hotel.room_types.create(name: 'test room type 2')
