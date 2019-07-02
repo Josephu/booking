@@ -36,7 +36,7 @@ class App extends React.Component {
 class HotelList extends React.Component {
   render() {
     const hotels = this.props.data.map((hotel) =>
-      <Hotel data={hotel} key={hotel.id}/>
+      <Hotel hotel={hotel} key={hotel.id}/>
     );
     return (
       <div className="hotel-list">
@@ -51,7 +51,7 @@ class Hotel extends React.Component {
     isModalOpen: false
   };
   // Enable parent to trigger child function
-  setupModalToggle = (toggleModal) => {
+  setupModalToggle(toggleModal) {
     this.toggleModal = toggleModal
   }
   render() {
@@ -59,16 +59,16 @@ class Hotel extends React.Component {
       <Card body className="mb-3">
         <Row className="no-gutters">
           <Col sm="3">
-            <CardImg top src={this.props.data.cover_image} />
+            <CardImg top src={this.props.hotel.cover_image} />
           </Col>
           <Col sm="6">
             <CardBody>
-              <CardTitle>{this.props.data.name}</CardTitle>
+              <CardTitle>{this.props.hotel.name}</CardTitle>
               <Button color="primary" onClick={() => { this.toggleModal() } } >Do Something</Button>
             </CardBody>
           </Col>
         </Row>
-        <HotelModal setupToggleModal={this.setupModalToggle.bind(this)} data={this.props.data}></HotelModal>
+        <HotelModal setupToggleModal={this.setupModalToggle.bind(this)} hotel={this.props.hotel}></HotelModal>
       </Card>
     );
   }
@@ -99,25 +99,9 @@ class HotelModal extends React.Component {
   }
   render() {
     return (
-      <div>
-        <Modal isOpen={this.state.isOpen} toggle={this.toggle}>
-          <ModalHeader>
-            <Container>
-              <Row className="no-gutters">
-                <Col sm="4">
-                  <img width="100%" src={this.props.data.cover_image} />
-                </Col>
-                <Col sm="8">
-                  <h2 className="ml-3">{this.props.data.name}</h2>
-                </Col>
-              </Row>
-            </Container>
-          </ModalHeader>
-          <ModalBody>
-            <RoomTypeForm passClick={this.toggle}/>
-          </ModalBody>
-        </Modal>
-      </div>
+      <Modal isOpen={this.state.isOpen} toggle={this.toggle}>
+        <RoomTypeForm passClick={this.toggle} hotel={this.props.hotel} />
+      </Modal>
     );
   }
 }
@@ -129,7 +113,8 @@ class RoomTypeForm extends React.Component {
       roomTypes: [],
       selectedRoomTypeId: undefined,
       moveInDate: undefined,
-      moveOutDate: undefined
+      moveOutDate: undefined,
+      averageMonthlyRate: undefined
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -137,20 +122,26 @@ class RoomTypeForm extends React.Component {
   async componentDidMount() {
     await this.getRoomTypes();
   }
-  getRoomTypes = async () => {
+  async getRoomTypes() {
     const response = await axios.get('/api/v1/hotels/1/room_types')
     const roomTypes = response.data
     this.setState({ roomTypes: roomTypes })
+    this.setState({ selectedRoomTypeId: roomTypes[0].id })
+  };
+  async getRoomType() {
+    if (this.state.selectedRoomTypeId && this.state.moveInDate && this.state.moveOutDate) {
+      const response = await axios.get(`/api/v1/hotels/1/room_types/${this.state.selectedRoomTypeId}?move_in_date=${this.state.moveInDate}&move_out_date=${this.state.moveOutDate}`)
+      const roomType = response.data
+      this.setState({ averageMonthlyRate: roomType.average_monthly_rate })
+    }
   };
   async handleChange(event) {
-    if (event.target.id === 'roomTypeSelect') {
-      this.setState({ selectedRoomTypeId: event.target.value })
-    }
-    if (event.target.id === 'moveInDateSelect') {
-      this.setState({ moveInDate: event.target.value })
-    }
-    if (event.target.id === 'moveOutDateSelect') {
-      this.setState({ moveOutDate: event.target.value })
+    if (['selectedRoomTypeId', 'moveInDate', 'moveOutDate'].includes(event.target.id)) {
+      const state = {}
+      state[event.target.id] = event.target.value
+      this.setState(state, async function () {
+        await this.getRoomType()
+      })
     }
   }
   handleSubmit(event) {
@@ -162,36 +153,59 @@ class RoomTypeForm extends React.Component {
     );
 
     return (
-      <Form>
-        <FormGroup>
-          <Label for="roomTypeSelect">Room Type</Label>
-          <Input type="select" name="select" id="roomTypeSelect" onChange={this.handleIChange}>
-            {roomTypeOptions}
-          </Input>
-        </FormGroup>
-        <FormGroup>
-          <Label for="moveInDateSelect">Move In Date</Label>
-          <Input
-            type="date"
-            name="date"
-            id="moveInDateSelect"
-            placeholder="move in date"
-          />
-        </FormGroup>
-        <FormGroup>
-          <Label for="moveOutDateSelect">Move Out Date</Label>
-          <Input
-            type="date"
-            name="date"
-            id="moveOutDateSelect"
-            placeholder="move out date"
-          />
-        </FormGroup>
-        <FormGroup>
-          <Button className="mr-2" color="success" onClick={this.handleSubmit}>Book</Button>
-          <Button color="secondary" onClick={this.props.passClick}>Cancel</Button>
-        </FormGroup>
-      </Form>
+      <div>
+        <ModalHeader>
+          <Container>
+            <Row className="no-gutters">
+              <Col sm="4">
+                <img width="100%" src={this.props.hotel.cover_image} />
+              </Col>
+              <Col sm="8">
+                <div className="ml-3">
+                  <h2>{this.props.hotel.name}</h2>
+                  <h5>Rate: {this.state.averageMonthlyRate}</h5>
+                </div>
+              </Col>
+            </Row>
+          </Container>
+        </ModalHeader>
+        <ModalBody>
+          <Form>
+            <FormGroup>
+              <Label for="selectedRoomTypeId">Room Type</Label>
+              <Input type="select" name="select" id="selectedRoomTypeId" onChange={this.handleChange}>
+                {roomTypeOptions}
+              </Input>
+            </FormGroup>
+            <FormGroup>
+              <Label for="moveInDate">Move In Date</Label>
+              <Input
+                type="date"
+                name="date"
+                id="moveInDate"
+                placeholder="move in date"
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="moveOutDate">Move Out Date</Label>
+              <Input
+                type="date"
+                name="date"
+                id="moveOutDate"
+                placeholder="move out date"
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+          </Form>      
+        </ModalBody>
+        <ModalFooter>
+          <FormGroup>
+            <Button className="mr-2" color="success" onClick={this.handleSubmit}>Book</Button>
+            <Button color="secondary" onClick={this.props.passClick}>Cancel</Button>
+          </FormGroup>
+        </ModalFooter>
+      </div>
     );
   }
 }
