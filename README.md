@@ -23,6 +23,6 @@ rspec
 
 * Deployment instructions
 
-* Notes
+* Potential improvements
 
 Strong parameter is used for validation, however, swagger validator may potentially be used, with additional benefit of API documentation

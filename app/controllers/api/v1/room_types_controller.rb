@@ -1,9 +1,13 @@
 class Api::V1::RoomTypesController < ApplicationController
+  def index
+    @room_types = RoomType.where(params[:hotel_id])
+    render json: @room_types
+  end
   def show
     if (move_out_date < move_in_date)
       return render json: { message: 'move in date should be earlier than move out date'}, status: 400
     end
-    @room_type = RoomType.where(params[:hotel_id])
+    @room_type = RoomType.find(params[:id])
     render json: @room_type, move_in_date: move_in_date, move_out_date: move_out_date
   end
 
