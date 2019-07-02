@@ -36,7 +36,7 @@ class App extends React.Component {
 class HotelList extends React.Component {
   render() {
     const hotels = this.props.data.map((hotel) =>
-      <Hotel data={hotel} key={hotel.uuid}/>
+      <Hotel data={hotel} key={hotel.id}/>
     );
     return (
       <div className="hotel-list">

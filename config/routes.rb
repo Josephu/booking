@@ -3,7 +3,9 @@ Rails.application.routes.draw do
   
   namespace :api do
     namespace :v1 do
-      resources :hotels, only: [:index, :show]
+      resources :hotels, only: [:index, :show] do
+        resources :room_types, only: [:show]
+      end
     end
   end
 
