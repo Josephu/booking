@@ -5,7 +5,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import axios from 'axios'
-import { Container, Row, Col, Button, Card, CardBody, CardTitle, CardImg, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Container, Row, Col, Button, Card, CardBody, CardTitle, CardImg, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Input, Label } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 class App extends React.Component {
@@ -92,7 +92,7 @@ class HotelModal extends React.Component {
     // allow parent (hotel div) to access child (hotel modal) function `toggle`
     this.props.setupToggleModal(this.toggle);
   }
-  toggle() {
+  async toggle() {
     this.setState(prevState => ({
       isOpen: !prevState.isOpen
     }))
@@ -108,20 +108,90 @@ class HotelModal extends React.Component {
                   <img width="100%" src={this.props.data.cover_image} />
                 </Col>
                 <Col sm="8">
-                  <h2 class="ml-3">{this.props.data.name}</h2>
+                  <h2 className="ml-3">{this.props.data.name}</h2>
                 </Col>
               </Row>
             </Container>
           </ModalHeader>
           <ModalBody>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+            <RoomTypeForm passClick={this.toggle}/>
           </ModalBody>
-          <ModalFooter>
-            <Button color="primary" onClick={this.toggle} >Book</Button>
-            <Button color="secondary" onClick={this.toggle} >Cancel</Button>
-          </ModalFooter>
         </Modal>
       </div>
+    );
+  }
+}
+
+class RoomTypeForm extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      roomTypes: [],
+      selectedRoomTypeId: undefined,
+      moveInDate: undefined,
+      moveOutDate: undefined
+    }
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+  async componentDidMount() {
+    await this.getRoomTypes();
+  }
+  getRoomTypes = async () => {
+    const response = await axios.get('/api/v1/hotels/1/room_types')
+    const roomTypes = response.data
+    this.setState({ roomTypes: roomTypes })
+  };
+  async handleChange(event) {
+    if (event.target.id === 'roomTypeSelect') {
+      this.setState({ selectedRoomTypeId: event.target.value })
+    }
+    if (event.target.id === 'moveInDateSelect') {
+      this.setState({ moveInDate: event.target.value })
+    }
+    if (event.target.id === 'moveOutDateSelect') {
+      this.setState({ moveOutDate: event.target.value })
+    }
+  }
+  handleSubmit(event) {
+    alert('submit')
+  }
+  render() {
+    const roomTypeOptions = this.state.roomTypes.map((roomType) =>
+      <option value={roomType.id} key={roomType.id}>{roomType.name}</option>
+    );
+
+    return (
+      <Form>
+        <FormGroup>
+          <Label for="roomTypeSelect">Room Type</Label>
+          <Input type="select" name="select" id="roomTypeSelect" onChange={this.handleIChange}>
+            {roomTypeOptions}
+          </Input>
+        </FormGroup>
+        <FormGroup>
+          <Label for="moveInDateSelect">Move In Date</Label>
+          <Input
+            type="date"
+            name="date"
+            id="moveInDateSelect"
+            placeholder="move in date"
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label for="moveOutDateSelect">Move Out Date</Label>
+          <Input
+            type="date"
+            name="date"
+            id="moveOutDateSelect"
+            placeholder="move out date"
+          />
+        </FormGroup>
+        <FormGroup>
+          <Button className="mr-2" color="success" onClick={this.handleSubmit}>Book</Button>
+          <Button color="secondary" onClick={this.props.passClick}>Cancel</Button>
+        </FormGroup>
+      </Form>
     );
   }
 }
