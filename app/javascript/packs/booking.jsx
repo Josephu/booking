@@ -106,6 +106,30 @@ class HotelModal extends React.Component {
   }
 }
 
+class Availability extends React.Component {
+  render() {
+    let available = '';
+    if (this.props.available != null) {
+      if (this.props.available === true) {
+        available = <h5>Room available</h5>
+      } else {
+        available = <h5>Room unavailable</h5>
+      }
+    }
+    return available
+  }
+}
+
+class Rate extends React.Component {
+  render() {
+    let rate = '';
+    if (this.props.rate) {
+      rate = <h5>Rate: {this.props.rate}</h5>
+    }
+    return rate
+  }
+}
+
 class RoomTypeForm extends React.Component {
   constructor(props) {
     super(props)
@@ -114,7 +138,8 @@ class RoomTypeForm extends React.Component {
       selectedRoomTypeId: undefined,
       moveInDate: undefined,
       moveOutDate: undefined,
-      averageMonthlyRate: undefined
+      averageMonthlyRate: undefined,
+      available: undefined
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -132,7 +157,9 @@ class RoomTypeForm extends React.Component {
     if (this.state.selectedRoomTypeId && this.state.moveInDate && this.state.moveOutDate) {
       const response = await axios.get(`/api/v1/hotels/1/room_types/${this.state.selectedRoomTypeId}?move_in_date=${this.state.moveInDate}&move_out_date=${this.state.moveOutDate}`)
       const roomType = response.data
+      console.log(roomType)
       this.setState({ averageMonthlyRate: roomType.average_monthly_rate })
+      this.setState({ available: roomType.available })
     }
   };
   async handleChange(event) {
@@ -163,7 +190,8 @@ class RoomTypeForm extends React.Component {
               <Col sm="8">
                 <div className="ml-3">
                   <h2>{this.props.hotel.name}</h2>
-                  <h5>Rate: {this.state.averageMonthlyRate}</h5>
+                  <Rate rate={this.state.averageMonthlyRate} />
+                  <Availability available={this.state.available} />
                 </div>
               </Col>
             </Row>
