@@ -62,6 +62,7 @@ group :test do
   gem 'chromedriver-helper'
   gem 'rspec-rails', '~> 3.0'
   gem 'webmock'
+  gem 'timecop'
 end
 
 group :development, :test do

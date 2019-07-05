@@ -230,7 +230,7 @@ class RoomTypeForm extends React.Component {
         <ModalFooter>
           <FormGroup>
             <Button className="mr-2" color="success" onClick={this.handleSubmit}>Book</Button>
-            <Button color="secondary" onClick={this.props.passClick}>Cancel</Button>
+            <Button color="secondary" onClick={this.props.passClick}>Close</Button>
           </FormGroup>
         </ModalFooter>
       </div>

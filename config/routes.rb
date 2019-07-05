@@ -4,7 +4,9 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :hotels, only: [:index, :show] do
-        resources :room_types, only: [:index, :show]
+        resources :room_types, only: [:index, :show] do
+          post 'book'
+        end
       end
     end
   end
