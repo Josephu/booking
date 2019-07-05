@@ -18,6 +18,7 @@ class Api::V1::RoomTypesController < ApplicationController
     begin
       result = BookingService.new(params[:room_type_id], move_in_date, move_out_date).book
     rescue => e
+      logger.error(e.message)
       return render json: { message: e.message }, status: 400
     end
     @room_type = RoomType.find(params[:room_type_id])

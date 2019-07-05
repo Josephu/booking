@@ -5,7 +5,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import axios from 'axios'
-import { Container, Row, Col, Button, Card, CardBody, CardTitle, CardImg, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Input, Label } from 'reactstrap';
+import { Container, Row, Col, Button, Card, CardBody, CardTitle, CardImg, Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Input, Label, Alert } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 class App extends React.Component {
@@ -129,7 +129,15 @@ class Rate extends React.Component {
     return rate
   }
 }
-
+class FormMessage extends React.Component {
+  render() {
+    let alertMessage = '';
+    if (this.props.children) {
+      alertMessage = <Alert color={this.props.alertType}>{this.props.children}</Alert>
+    }
+    return alertMessage
+  }
+}
 class RoomTypeForm extends React.Component {
   constructor(props) {
     super(props)
@@ -139,7 +147,9 @@ class RoomTypeForm extends React.Component {
       moveInDate: undefined,
       moveOutDate: undefined,
       averageMonthlyRate: undefined,
-      available: undefined
+      available: undefined,
+      alertMessage: undefined,
+      alertType: undefined,
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -150,16 +160,22 @@ class RoomTypeForm extends React.Component {
   async getRoomTypes() {
     const response = await axios.get('/api/v1/hotels/1/room_types')
     const roomTypes = response.data
-    this.setState({ roomTypes: roomTypes })
-    this.setState({ selectedRoomTypeId: roomTypes[0].id })
+    this.setState({
+      roomTypes: roomTypes,
+      selectedRoomTypeId: roomTypes[0].id
+    })
   };
   async getRoomType() {
     if (this.state.selectedRoomTypeId && this.state.moveInDate && this.state.moveOutDate) {
       const response = await axios.get(`/api/v1/hotels/1/room_types/${this.state.selectedRoomTypeId}?move_in_date=${this.state.moveInDate}&move_out_date=${this.state.moveOutDate}`)
       const roomType = response.data
       console.log(roomType)
-      this.setState({ averageMonthlyRate: roomType.average_monthly_rate })
-      this.setState({ available: roomType.available })
+      this.setState({
+        averageMonthlyRate: roomType.average_monthly_rate,
+        available: roomType.available,
+        alertMessage: undefined,
+        alertType: undefined
+      })
     }
   };
   async handleChange(event) {
@@ -171,14 +187,37 @@ class RoomTypeForm extends React.Component {
       })
     }
   }
-  handleSubmit(event) {
-    alert('submit')
+  async handleSubmit() {
+    try {
+      const response = await axios.post(
+        `/api/v1/hotels/1/room_types/${this.state.selectedRoomTypeId}/book`,
+        {
+          move_in_date: this.state.moveInDate,
+          move_out_date: this.state.moveOutDate
+        }
+      )
+      const roomType = response.data
+      this.setState({
+        averageMonthlyRate: roomType.average_monthly_rate,
+        available: roomType.available,
+        alertMessage: 'successfully booked a room',
+        alertType: 'success'
+      })
+    } catch (error) {
+      let alertMessage = error.message
+      if (error.response && error.response.data) {
+        alertMessage = error.response.data.message
+      }
+      this.setState({
+        alertMessage: alertMessage,
+        alertType: 'danger'
+      })
+    }
   }
   render() {
     const roomTypeOptions = this.state.roomTypes.map((roomType) =>
       <option value={roomType.id} key={roomType.id}>{roomType.name}</option>
     );
-
     return (
       <div>
         <ModalHeader>
@@ -193,6 +232,11 @@ class RoomTypeForm extends React.Component {
                   <Rate rate={this.state.averageMonthlyRate} />
                   <Availability available={this.state.available} />
                 </div>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col sm="12">
+                <FormMessage alertType={this.state.alertType} >{this.state.alertMessage}</FormMessage>
               </Col>
             </Row>
           </Container>
