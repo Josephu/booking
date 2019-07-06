@@ -2,7 +2,7 @@ class Api::V1::RoomTypesController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def index
-    @room_types = RoomType.where(params[:hotel_id])
+    @room_types = RoomType.where(hotel_id: params[:hotel_id])
     render json: @room_types
   end
 
