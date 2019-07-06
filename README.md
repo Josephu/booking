@@ -1,28 +1,29 @@
 # README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
-
-Things you may want to cover:
-
 * Ruby version
-2.3.1 or above
+2.3 or above
 
-* System dependencies
+* Setup environment
 
-* Configuration
+`bundle install`
+`yarn install`
 
-* Database creation
+* Database setup
 
-* Database initialization
+The db is sqlite. To prepare your local environment, please do:
+`rake db:create db:migrate db:seed`
 
 * How to run the test suite
-rspec
 
-* Services (job queues, cache servers, search engines, etc.)
+`rspec`
 
-* Deployment instructions
+* How to start website
+
+```
+rails s
+go to http://localhost:3000/hotels
+```
 
 * Potential improvements
 
-Strong parameter is used for validation, however, swagger validator may potentially be used, with additional benefit of API documentation
+Introduce swagger to document restful APIs
