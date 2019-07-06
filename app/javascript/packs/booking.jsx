@@ -14,8 +14,7 @@ class App extends React.Component {
   }
   getHotels = async() => {
     const response = await axios.get('/api/v1/hotels')
-    const hotels = response.data
-    this.setState({ hotels })
+    this.setState({ hotels: response.data })
   };
   render() {
      return (
@@ -30,6 +29,6 @@ class App extends React.Component {
 document.addEventListener('DOMContentLoaded', () => {
   ReactDOM.render(
     <App />,
-    document.body.appendChild(document.createElement('div')),
+    document.getElementById('app')
   )
 })

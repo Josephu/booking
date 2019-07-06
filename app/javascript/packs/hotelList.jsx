@@ -3,29 +3,28 @@
 // of the page.
 
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Row, Col, Button, Card, CardBody, CardTitle, CardImg } from 'reactstrap'
-import { HotelModal } from './components/hotelModal'
+import { RoomTypeForm } from './components/roomTypeForm'
 
-export class HotelList extends React.Component {
-  render() {
-    const hotels = this.props.data.map((hotel) =>
-      <Hotel hotel={hotel} key={hotel.id}/>
-    );
-    return (
-      <div className="hotel-list">
-        {hotels}
-      </div>
-    );
-  }
+export function HotelList(props) {
+  const hotels = props.data.map((hotel) =>
+    <Hotel hotel={hotel} key={hotel.id}/>
+  );
+  return <div className="hotel-list">{hotels}</div>
 }
 
 class Hotel extends React.Component {
-  state = {
-    isModalOpen: false
-  };
-  // Enable parent to trigger child function
-  setupModalToggle(toggleModal) {
-    this.toggleModal = toggleModal
+  constructor(props) {
+    super(props)
+    this.state = {
+      isModalOpen: false,
+    }
+  }
+  toggleModal = () => {
+    this.setState(prevState => ({
+      isModalOpen: !prevState.isModalOpen
+    }))
   }
   render() {
     return (      
@@ -40,9 +39,20 @@ class Hotel extends React.Component {
             </CardBody>
           </Col>
         </Row>
-        <HotelModal setupToggleModal={this.setupModalToggle.bind(this)} hotel={this.props.hotel}></HotelModal>
+        <RoomTypeForm hotel={this.props.hotel} isModalOpen={this.state.isModalOpen}></RoomTypeForm>
       </Card>
     );
   }
 }
 
+HotelList.propTypes = {
+  hotel: PropTypes.shape(Hotel.propTypes)
+}
+
+Hotel.propTypes = {
+  hotel: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    cover_image: PropTypes.string.isRequired
+  })
+}

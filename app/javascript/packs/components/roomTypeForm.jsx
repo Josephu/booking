@@ -1,28 +1,39 @@
 import React from 'react'
-import { Container, Row, Col, Button, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Input, Label } from 'reactstrap';
-import { FormMessage} from './form/formMessage'
-import { Rate } from './form/rate'
-import { Availability } from './form/availability'
+import PropTypes from 'prop-types'
+import { Modal, Container, Row, Col, Button, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Input, Label, Alert } from 'reactstrap';
 import axios from 'axios'
 
 export class RoomTypeForm extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      isOpen: false,
       roomTypes: [],
       selectedRoomTypeId: undefined,
-      moveInDate: undefined,
-      moveOutDate: undefined,
+      form: {
+        move_in_date: undefined,
+        move_out_date: undefined,
+      },
       averageMonthlyRate: undefined,
       available: undefined,
       alertMessage: undefined,
       alertType: undefined,
     }
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
   }
-  async componentDidMount() {
-    await this.getRoomTypes();
+  componentDidUpdate(oldProps) {
+    const newProps = this.props
+    if (oldProps.isModalOpen !== newProps.isModalOpen) {
+      this.setState({ isOpen: newProps.isModalOpen })
+    }
+  }
+  componentDidMount() {
+    this.getRoomTypes()
+  }
+  toggle = () => {
+    this.setState(prevState => ({
+      isOpen: !prevState.isOpen,
+      alertMessage: undefined,
+    }))
   }
   async getRoomTypes() {
     const response = await axios.get(`/api/v1/hotels/${this.props.hotel.id}/room_types`)
@@ -33,36 +44,46 @@ export class RoomTypeForm extends React.Component {
     })
   };
   async getRoomType() {
-    if (this.state.selectedRoomTypeId && this.state.moveInDate && this.state.moveOutDate) {
-      const response = await axios.get(`/api/v1/hotels/${this.props.hotel.id}/room_types/${this.state.selectedRoomTypeId}?move_in_date=${this.state.moveInDate}&move_out_date=${this.state.moveOutDate}`)
-      const roomType = response.data
-      console.log(roomType)
-      this.setState({
-        averageMonthlyRate: roomType.average_monthly_rate,
-        available: roomType.available,
-        alertMessage: undefined,
-        alertType: undefined
-      })
-    }
+    const { selectedRoomTypeId, form } = this.state;
+
+    if (!selectedRoomTypeId || !form.move_in_date || !form.move_out_date) return;
+
+    const response = await axios.get(`/api/v1/hotels/${this.props.hotel.id}/room_types/${selectedRoomTypeId}`, { params: form })
+    const roomType = response.data
+    this.setState({
+      averageMonthlyRate: roomType.average_monthly_rate,
+      available: roomType.available,
+      alertMessage: undefined,
+      alertType: undefined
+    })
   };
-  async handleChange(event) {
-    if (['selectedRoomTypeId', 'moveInDate', 'moveOutDate'].includes(event.target.id)) {
-      const state = {}
-      state[event.target.id] = event.target.value
-      this.setState(state, async function () {
-        await this.getRoomType()
-      })
+  handleChange = async (event) => {
+    const alertMessage = undefined
+    if (event.target.id === 'selectedRoomTypeId') {
+      this.setState({
+        selectedRoomTypeId: event.target.value,
+        alertMessage
+      }, () => this.getRoomType())
+    }
+    else if (event.target.id === 'moveInDate') {
+      const form = {
+        move_in_date: event.target.value,
+        move_out_date: this.state.form.move_out_date
+      }
+      this.setState({ form , alertMessage }, () => this.getRoomType())
+    }
+    else if (event.target.id === 'moveOutDate') {
+      const form = {
+        move_in_date: this.state.form.move_in_date,
+        move_out_date: event.target.value,
+      }
+      this.setState({ form, alertMessage }, () => this.getRoomType())
     }
   }
-  async handleSubmit() {
+  handleSubmit = async () => {
     try {
-      const response = await axios.post(
-        `/api/v1/hotels/${this.props.hotel.id}/room_types/${this.state.selectedRoomTypeId}/book`,
-        {
-          move_in_date: this.state.moveInDate,
-          move_out_date: this.state.moveOutDate
-        }
-      )
+      const { selectedRoomTypeId, form } = this.state;
+      const response = await axios.post(`/api/v1/hotels/${this.props.hotel.id}/room_types/${selectedRoomTypeId}/book`, form)
       const roomType = response.data
       this.setState({
         averageMonthlyRate: roomType.average_monthly_rate,
@@ -82,20 +103,31 @@ export class RoomTypeForm extends React.Component {
     }
   }
   render() {
+    const { hotel} = this.props
+    const { alertMessage, alertType } = this.state
     const roomTypeOptions = this.state.roomTypes.map((roomType) =>
       <option value={roomType.id} key={roomType.id}>{roomType.name}</option>
     );
+    const Availability = ({ available }) => {
+      if (available == null) return null
+      return available ? <h5>Room available</h5> : <h5>Room unavailable</h5>
+    }
+    const Rate = ({ rate }) => {
+      if (rate == null) return null
+      return <h5>Rate: { rate }</h5>
+    }
+    const message = alertMessage ? <Alert color={alertType}>{alertMessage}</Alert> : null
     return (
-      <div>
-        <ModalHeader toggle={this.props.passClick}>
+      <Modal isOpen={this.state.isOpen} toggle={this.toggle}>
+        <ModalHeader toggle={this.toggle}>
           <Container>
             <Row className="no-gutters">
               <Col sm="4">
-                <img width="100%" src={this.props.hotel.cover_image} />
+                <img width="100%" src={hotel.cover_image} />
               </Col>
               <Col sm="8">
                 <div className="ml-3">
-                  <h2>{this.props.hotel.name}</h2>
+                  <h2>{hotel.name}</h2>
                   <Rate rate={this.state.averageMonthlyRate} />
                   <Availability available={this.state.available} />
                 </div>
@@ -103,7 +135,7 @@ export class RoomTypeForm extends React.Component {
             </Row>
             <Row className="mt-3">
               <Col sm="12">
-                <FormMessage alertType={this.state.alertType} >{this.state.alertMessage}</FormMessage>
+                {message}
               </Col>
             </Row>
           </Container>
@@ -143,7 +175,20 @@ export class RoomTypeForm extends React.Component {
             <Button className="mr-2" color="success" onClick={this.handleSubmit}>Book</Button>
           </FormGroup>
         </ModalFooter>
-      </div>
+      </Modal>
     );
   }
+}
+
+RoomTypeForm.propTypes = {
+  hotel: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    cover_image: PropTypes.string.isRequired
+  }),
+  isModalOpen: PropTypes.bool.isRequired
+}
+
+RoomTypeForm.defaultProps = {
+  isModalOpen: false 
 }
