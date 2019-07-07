@@ -4,7 +4,7 @@ class CreateRoomTypeDates < ActiveRecord::Migration[5.2]
       t.date :date
       t.decimal :rate
       t.integer :room_type_id
-      t.integer :room_id
+      t.integer :availability
 
       t.timestamps
     end

@@ -1,6 +1,5 @@
 class HotelsController < ApplicationController
   def index
-    @hotels = Hotel.all
-    render json: @hotels
+    render
   end
 end
